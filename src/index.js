@@ -3,39 +3,61 @@ const discord = require("discord.js");
 const bot = new discord.Client()
 const api_key = process.env.API_KEY
 const ytdl = require('ytdl-core');
-const streamOptions = { seek: 0, volume: 1 };
-const fs =require('fs')
+const ytdlDiscord = require("ytdl-core-discord");
+const streamOptions = {
+  seek: 0,
+  volume: 1
+};
+const fs = require('fs')
 bot.login(api_key);
 
 bot.once("ready", () => {
-    console.log("connected");
+  console.log("connected");
 })
-
-
-const opgg = require("op.gg-api");
 
 const parser = require("discord-command-parser");
 const prefix = "&";
 
 bot.on("ready", () => {
-    console.log("BrainBot is Online")
+  console.log("BrainBot is Online")
 })
 bot.on("reconnecting", () => {
-    console.log("BrainBot is attempting to Reconnect")
+  console.log("BrainBot is attempting to Reconnect")
 })
 bot.on('message', async message => {
-    if (message.content === '&play'){
-        if (message.member.voiceChannel) {
-            const connection = await message.member.voiceChannel.join()
-            const stream = fs.createReadStream('https://www.youtube.com/watch?v=9fWxCIi5PIw')
-            connection.playStream(stream)
-                //const dispatcher = connection.playStream(ytdl('https://www.youtube.com/watch?v=9fWxCIi5PIw',{ format: 'audioonly'}))
-            
-            
-        }else {
-            message.reply('You need to join a voice channel first')
-        }
+  if (message.content === '&play') {
+    if (message.member.voiceChannel) {
+      const connection = await message.member.voiceChannel.join();
+
+
+      const dispatcher = connection.playOpusStream(await ytdlDiscord("https://youtu.be/CH50zuS8DD0"), { passes: 3})
+				.on('end', reason => {
+					if (reason === 'Stream is not generating quickly enough.') console.log('Song ended.');
+					else console.log(reason);
+				})
+                .on('error', error => console.error(error));
+        dispatcher.setVolumeLogarithmic(2 / 5);
+
+
+      dispatcher.on('start', () => {
+        console.log('audio.mp3 is now playing!');
+      });
+
+      dispatcher.on('finish', () => {
+        console.log('audio.mp3 has finished playing!');
+      });
+
+
+
+      //   const connection = await message.member.voice.channel.join();
+      //   const stream = fs.createReadStream('https://www.youtube.com/watch?v=9fWxCIi5PIw')
+      //   connection.playStream(stream)
+      //   const dispatcher = connection.playStream(ytdl('https://www.youtube.com/watch?v=9fWxCIi5PIw',{ format: 'audioonly'}))
+
+    } else {
+      message.reply('You need to join a voice channel first')
     }
+  }
 })
 
 /*bot.on("message",  async (msg) => {
