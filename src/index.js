@@ -32,7 +32,7 @@ bot.on('message', async message => {
       // this worked: https://youtu.be/CH50zuS8DD0
       // https://youtu.be/pACxn9n1U4E
 
-      const dispatcher = connection.play(ytdl("https://youtu.be/pACxn9n1U4E"))
+      const dispatcher = connection.play(ytdl("https://www.youtube.com/watch?v=aYekOTLmOLs"))
 				.on('end', reason => {
 					if (reason === 'Stream is not generating quickly enough.') console.log('Song ended.');
 					else console.log("Reason: ", reason);
