@@ -4,18 +4,15 @@ const bot = new discord.Client()
 const api_key = process.env.API_KEY
 const ytdl = require('ytdl-core');
 const ytdlDiscord = require("ytdl-core-discord");
-const streamOptions = {
-  seek: 0,
-  volume: 1
-};
-const fs = require('fs')
+
+
 bot.login(api_key);
 
 bot.once("ready", () => {
   console.log("connected");
 })
 
-const parser = require("discord-command-parser");
+//const parser = require("discord-command-parser");
 const PREFIX = "&";
 
 bot.on("ready", () => {
@@ -52,18 +49,16 @@ bot.on("message", function(message) {
                 return;
             };
             if (!message.guild.voiceConnection) message.member.voice.channel.join().then(function(connection) {
-                message = message.toString()
+                message = args[1].toString()
                 playMusic(connection, message)
-            })
-
+            });
+            break;
+        default:
+            message.channel.send("Invalid Command")
+            
 
         
     }
-
-
-
-
-
 
 })
 
@@ -77,8 +72,8 @@ function summonBot (channel) {
     .catch(console.error)
 }
 function playMusic (connection, message) {
-    let dispatcher =  connection.play(ytdl(message, {format: 'audioonly'}))
-        .on('end', reason => {
+    dispatcher =  connection.play(ytdl(message, {format: 'audioonly'}))
+       .on('end', reason => {
             if (reason === 'Stream is not generating quickly enough.') console.log('Song ended.');
             else console.log("Reason: ", reason);
          })
@@ -87,10 +82,10 @@ function playMusic (connection, message) {
 
 
     dispatcher.on('start', () => {
-        console.log('Audio Stream is Now Playing!');
+        console.log('Audio Stream is Now Playing' + ' ' + message);
     });
 
-    dispatcher.on('finish', () => {
+   dispatcher.on('finish', () => {
         console.log('Audio Stream has Finished Playing!');
     });
     
