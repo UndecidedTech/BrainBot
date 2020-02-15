@@ -3,7 +3,7 @@ const discord = require("discord.js");
 const bot = new discord.Client()
 const api_key = process.env.API_KEY
 const ytdl = require('ytdl-core');
-const ytdlDiscord = require("ytdl-core-discord");
+
 
 
 bot.login(api_key);
@@ -21,8 +21,10 @@ bot.on("ready", () => {
 bot.on("reconnecting", () => {
   console.log("BrainBot is attempting to Reconnect")
 })
+let musicQueue = [];
 
-bot.on("message", function(message) { 
+
+bot.on("message", async function(message) { 
     if (message.author.equals(bot.user)) return;
 
     if (!message.content.startsWith(PREFIX)) return;
@@ -30,17 +32,19 @@ bot.on("message", function(message) {
     let args = message.content.substring(PREFIX.length).split(" ");
 
     const channel = message.member.voice.channel;
+    
 
     switch (args[0].toLowerCase()) {
         case "come":
             summonBot(channel)
             break;
         case "leave":
-            channel.leave()
+            message.channel.send("Good bye cruel world").then(channel.leave())
             console.log("Bot has left the channel")
             break;
         case "play":
-            if (!args[1]) {
+            let url = args[1];
+            if (!url) {
                 message.channel.send("Please provide a link")
                 return;
             };
@@ -48,10 +52,16 @@ bot.on("message", function(message) {
                 message.channel.send("You must be in a voice channel")
                 return;
             };
-            if (!message.guild.voiceConnection) message.member.voice.channel.join().then(function(connection) {
-                message = args[1].toString()
-                playMusic(connection, message)
-            });
+            if (!message.guild.voiceConnection) {
+                message.member.voice.channel.join().then(async function(connection) {
+
+                musicQueue.push(url);
+                await playMusic(connection)
+
+            })};
+            break;
+        case "add":
+            musicQueue.push(args[1]);
             break;
         default:
             message.channel.send("Invalid Command")
@@ -71,23 +81,48 @@ function summonBot (channel) {
     .then(connection => console.log("Connected to Voice Channel"))
     .catch(console.error)
 }
-function playMusic (connection, message) {
-    dispatcher =  connection.play(ytdl(message, {format: 'audioonly'}))
-       .on('end', reason => {
-            if (reason === 'Stream is not generating quickly enough.') console.log('Song ended.');
-            else console.log("Reason: ", reason);
-         })
-        .on('error', error => console.error(error));
-    dispatcher.setVolumeLogarithmic(2 / 5);
 
+async function playMusic (connection) {
+  
+  const stream = ytdl(musicQueue[0], { filter: 'audioonly'});
+  const dispatcher = connection.play(stream);
 
-    dispatcher.on('start', () => {
-        console.log('Audio Stream is Now Playing' + ' ' + message);
-    });
+  dispatcher.on('end', () => {
+    musicQueue.shift();
 
-   dispatcher.on('finish', () => {
-        console.log('Audio Stream has Finished Playing!');
-    });
+    if(musicQueue.length === 0 ){
+      connection.leave();
+    }
+    else{
+      setTimeout(() => {
+        playMusic(connection);
+      }, 5000);
+    }
+  });
+  
+  
+  
+  
+  
+  
+  
+  
+  //   dispatcher =  connection.play(ytdl(queue[0], {format: 'audioonly'}));
+  //   queue.shift();
+  //   dispatcher.on('end', function(){
+  //         if(queue[0]) playMusic (connection, queue);
+  //         else connection.leave()
+  //        })
+  //   dispatcher.on('error', error => console.error(error));
+  //   dispatcher.setVolumeLogarithmic(2 / 5);
+
+  //   dispatcher.on('start', () => {
+  //       console.log('Audio Stream is Now Playing');
+  //   });
+
+  //  dispatcher.on('finish', () => {
+  //       console.log('Audio Stream has Finished Playing!');
+  //   });
     
 }
 
