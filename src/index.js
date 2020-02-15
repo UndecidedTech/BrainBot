@@ -26,14 +26,16 @@ bot.on("reconnecting", () => {
 })
 bot.on('message', async message => {
   if (message.content === '&play') {
-    if (message.member.voiceChannel) {
-      const connection = await message.member.voiceChannel.join();
+    if (message.member.voice.channel) {
+      const connection = await message.member.voice.channel.join();
 
+      // this worked: https://youtu.be/CH50zuS8DD0
+      // https://youtu.be/pACxn9n1U4E
 
-      const dispatcher = connection.playOpusStream(await ytdlDiscord("https://youtu.be/CH50zuS8DD0"), { passes: 3})
+      const dispatcher = connection.play(ytdl("https://youtu.be/pACxn9n1U4E"))
 				.on('end', reason => {
 					if (reason === 'Stream is not generating quickly enough.') console.log('Song ended.');
-					else console.log(reason);
+					else console.log("Reason: ", reason);
 				})
                 .on('error', error => console.error(error));
         dispatcher.setVolumeLogarithmic(2 / 5);
